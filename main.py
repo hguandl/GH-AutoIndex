@@ -7,7 +7,7 @@ from responses import AutoindexResponse, FileResponse, NonExistResponse
 
 ROOT_PATH = '.'
 LISTEN_ADDR = '127.0.0.1'
-LISTEN_PORT = 8000
+LISTEN_PORT = 8080
 
 
 def range_parser(part_range) -> (int, int):
@@ -32,7 +32,7 @@ async def dispatch(reader, writer):
     while True:
         data = await reader.readline()
         headers_data.append(data.decode())
-        print(data)
+        # print(data)
         if data == b'\r\n' or data == b'':
             break
 
