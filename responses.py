@@ -6,13 +6,14 @@ from mime_types import mime_types
 
 
 class AutoindexResponse(object):
-    def __init__(self, path):
+    def __init__(self, path, real_path):
         self.headers = ('HTTP/1.0 200 OK\r\n'
                         'Content-Type:text/html; charset=utf-8\r\n'
                         'Server: GH-Autoindex\r\n'
                         'Connection: close\r\n'
                         '\r\n')
-        self.dir = path
+        self.path = path
+        self.real_path = real_path
         title = html.escape(path)
         self.content = ('<html><head><title>Index of ' + title + '</title></head>\r\n'
                        '<body bgcolor="white">\r\n'
@@ -20,7 +21,7 @@ class AutoindexResponse(object):
                        '<pre>\r\n')
 
     def add_entry(self, name):
-        if not os.path.isfile('./' + self.dir + name):
+        if not os.path.isfile(self.real_path + name):
             name += '/'
         link = urllib.parse.quote(name)
         text = html.escape(name)

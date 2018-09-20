@@ -5,6 +5,10 @@ import urllib.parse
 import parse_header
 from responses import AutoindexResponse, FileResponse, NonExistResponse
 
+ROOT_PATH = '.'
+LISTEN_ADDR = '127.0.0.1'
+LISTEN_PORT = 8000
+
 
 def range_parser(part_range) -> (int, int):
     if part_range is not None:
@@ -39,11 +43,11 @@ async def dispatch(reader, writer):
     part_range = range_parser(client_headers.get('range'))
     session_id = client_headers.get('session_id')
 
-    real_path = "." + path
+    real_path = ROOT_PATH + path
 
     try:
         if not os.path.isfile(real_path):
-            response = AutoindexResponse(path)
+            response = AutoindexResponse(path, real_path)
             response.add_entry('..')
             for filename in os.listdir(real_path):
                 if filename[0:1] != '.':
@@ -65,7 +69,7 @@ async def dispatch(reader, writer):
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    coro = asyncio.start_server(dispatch, '0.0.0.0', 8000, loop=loop)
+    coro = asyncio.start_server(dispatch, LISTEN_ADDR, LISTEN_PORT, loop=loop)
     server = loop.run_until_complete(coro)
 
     # Serve requests until Ctrl+C is pressed
