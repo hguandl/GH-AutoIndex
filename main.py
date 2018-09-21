@@ -3,7 +3,7 @@ import os
 import urllib.parse
 
 import parse_header
-from responses import AutoindexResponse, FileResponse, NonExistResponse
+from responses import AutoIndexResponse, FileResponse, NonExistResponse, InvalidMethodResponse
 
 ROOT_PATH = '.'
 LISTEN_ADDR = '127.0.0.1'
@@ -39,27 +39,43 @@ async def dispatch(reader, writer):
     client_headers = parse_header.HTTPHeader()
     for line in headers_data:
         client_headers.parse_header(line)
-    path = urllib.parse.unquote(client_headers.get('path'))
-    part_range = range_parser(client_headers.get('range'))
 
-    real_path = ROOT_PATH + path
+    method = client_headers.get('method')
+    if method != 'GET' and method != 'HEAD':
+        response = InvalidMethodResponse()
+        writer.write(response.get_response())
 
-    try:
-        if not os.path.isfile(real_path):
-            response = AutoindexResponse(path, real_path)
-            response.add_entry('..')
-            for filename in os.listdir(real_path):
-                if filename[0:1] != '.':
-                    response.add_entry(filename)
-            writer.write(response.get_response())
+    else:
+        path = urllib.parse.unquote(client_headers.get('path'))
+        part_range = range_parser(client_headers.get('range'))
 
-        else:
-            response = FileResponse(real_path, part_range)
-            writer.write(response.get_response())
+        real_path = ROOT_PATH + path
 
-    except FileNotFoundError:
-        response = NonExistResponse()
-        writer.writelines(response.get_response())
+        try:
+            if not os.path.isfile(real_path):
+                response = AutoIndexResponse(path, real_path)
+                response.add_entry('..')
+                for filename in os.listdir(real_path):
+                    if filename[0:1] != '.':
+                        response.add_entry(filename)
+                if method == 'GET':
+                    writer.write(response.get_response())
+                elif method == 'HEAD':
+                    writer.write(response.get_headers())
+
+            else:
+                response = FileResponse(real_path, part_range)
+                if method == 'GET':
+                    writer.write(response.get_response())
+                elif method == 'HEAD':
+                    writer.write(response.get_headers())
+
+        except FileNotFoundError:
+            response = NonExistResponse()
+            if method == 'GET':
+                writer.write(response.get_response())
+            elif method == 'HEAD':
+                writer.write(response.get_headers())
 
     await writer.drain()
     writer.close()

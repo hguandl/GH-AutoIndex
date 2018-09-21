@@ -5,11 +5,11 @@ import urllib.parse
 from mime_types import mime_types
 
 
-class AutoindexResponse(object):
+class AutoIndexResponse(object):
     def __init__(self, path, real_path):
         self.headers = ('HTTP/1.0 200 OK\r\n'
                         'Content-Type:text/html; charset=utf-8\r\n'
-                        'Server: GH-Autoindex\r\n'
+                        'Server: GH-AutoIndex\r\n'
                         'Connection: close\r\n')
         self.path = path
         self.real_path = real_path
@@ -27,13 +27,18 @@ class AutoindexResponse(object):
         html_code = str.format('<a href="%s">%s</a>\r\n' % (link, text))
         self.content += html_code
 
-    def get_response(self) -> bytes:
+    def get_content(self) -> bytes:
         self.content += ('</pre>\r\n'
                          '<hr>\r\n'
                          '</body></html>\r\n')
-        content_bin = self.content.encode()
-        self.headers += str.format('Content-Length: %d\r\n\r\n' % (len(content_bin)))
-        return self.headers.encode() + content_bin
+        return self.content.encode()
+
+    def get_headers(self) -> bytes:
+        self.headers += str.format('Content-Length: %d\n\n' % (len(self.get_content())))
+        return self.headers.encode()
+
+    def get_response(self) -> bytes:
+        return self.get_headers() + self.get_content()
 
 
 class FileResponse(object):
@@ -48,7 +53,7 @@ class FileResponse(object):
             if self.end < 0:
                 self.end = self.size + self.end
             self.headers = ('HTTP/1.0 206 Partial Content\r\n'
-                            'Server: GH-Autoindex\r\n')
+                            'Server: GH-AutoIndex\r\n')
             self.headers += 'Content-Type: ' + self.__file_type() + '\r\n'
             self.headers += str.format('Content-Range: bytes %d-%d/%d\r\n' %
                                        (self.start, self.end, self.size))
@@ -57,7 +62,7 @@ class FileResponse(object):
 
         else:
             self.headers = ('HTTP/1.0 200 OK\r\n'
-                            'Server: GH-Autoindex\r\n')
+                            'Server: GH-AutoIndex\r\n')
             self.headers += 'Content-Type: ' + self.__file_type() + '\r\n'
             self.headers += 'Connection: close\r\n'
             self.headers += 'Content-Length: ' + str(self.size) + '\r\n'
@@ -88,18 +93,51 @@ class FileResponse(object):
 
 class NonExistResponse(object):
     def __init__(self):
-        self.response = [b'HTTP/1.0 404 Not Found\r\n',
-                         b'Content-Type:text/html; charset=utf-8\r\n',
-                         b'Server: GH-Autoindex\r\n',
-                         b'Connection: close\r\n',
-                         b'\r\n',
-                         b'<html>\r\n',
-                         b'<head><title>404 Not Found</title></head>\r\n',
-                         b'<body bgcolor="white">\r\n',
-                         b'<center><h1>404 Not Found</h1></center>\r\n',
-                         b'<hr><center>GH-Autoindex/0.0.1</center>\r\n',
-                         b'</body>\r\n',
-                         b'</html>\r\n']
+        self.headers = ('HTTP/1.0 404 Not Found\r\n'
+                        'Content-Type:text/html; charset=utf-8\r\n'
+                        'Server: GH-AutoIndex\r\n'
+                        'Connection: close\r\n'
+                        '\r\n')
 
-    def get_response(self):
-        return self.response
+        self.content = ('<html>\r\n'
+                        '<head><title>404 Not Found</title></head>\r\n'
+                        '<body bgcolor="white">\r\n'
+                        '<center><h1>404 Not Found</h1></center>\r\n'
+                        '<hr><center>GH-AutoIndex/0.1.0</center>\r\n'
+                        '</body>\r\n'
+                        '</html>\r\n')
+
+    def get_headers(self) -> bytes:
+        return self.headers.encode()
+
+    def get_content(self) -> bytes:
+        return self.content.encode()
+
+    def get_response(self) -> bytes:
+        return self.get_headers() + self.get_content()
+
+
+class InvalidMethodResponse(object):
+    def __init__(self):
+        self.headers = ('HTTP/1.0 405 Method Not Allowed\r\n'
+                        'Content-Type:text/html; charset=utf-8\r\n'
+                        'Server: GH-AutoIndex\r\n'
+                        'Connection: close\r\n'
+                        '\r\n')
+
+        self.content = ('<html>\r\n'
+                        '<head><title>405 Method Not Allowed</title></head>\r\n'
+                        '<body bgcolor="white">\r\n'
+                        '<center><h1>405 Method Not Allowed</h1></center>\r\n'
+                        '<hr><center>GH-AutoIndex/0.1.0</center>\r\n'
+                        '</body>\r\n'
+                        '</html>\r\n')
+
+    def get_headers(self) -> bytes:
+        return self.headers.encode()
+
+    def get_content(self) -> bytes:
+        return self.content.encode()
+
+    def get_response(self) -> bytes:
+        return self.get_headers() + self.get_content()
