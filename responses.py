@@ -32,7 +32,7 @@ class AutoindexResponse(object):
         self.content += ('</pre>\r\n'
                         '<hr>\r\n'
                         '</body></html>\r\n')
-        return bytes(self.headers + self.content, 'utf-8')
+        return (self.headers + self.content).encode()
 
 
 class FileResponse(object):
@@ -69,7 +69,7 @@ class FileResponse(object):
         return f_type
 
     def get_headers(self) -> bytes:
-        return bytes(self.headers, 'utf-8')
+        return self.headers.encode()
 
     def get_content(self) -> bytes:
         file = open(self.path, 'rb')
@@ -80,6 +80,9 @@ class FileResponse(object):
             ret = file.read()
         file.close()
         return ret
+
+    def get_response(self) -> bytes:
+        return self.get_headers() + self.get_content()
 
 
 class NonExistResponse(object):

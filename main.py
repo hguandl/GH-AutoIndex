@@ -56,8 +56,7 @@ async def dispatch(reader, writer):
 
         else:
             response = FileResponse(real_path, part_range, session_id)
-            writer.write(response.get_headers())
-            writer.write(response.get_content())
+            writer.write(response.get_response())
 
     except FileNotFoundError:
         response = NonExistResponse()
