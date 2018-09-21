@@ -41,7 +41,6 @@ async def dispatch(reader, writer):
         client_headers.parse_header(line)
     path = urllib.parse.unquote(client_headers.get('path'))
     part_range = range_parser(client_headers.get('range'))
-    session_id = client_headers.get('session_id')
 
     real_path = ROOT_PATH + path
 
@@ -55,7 +54,7 @@ async def dispatch(reader, writer):
             writer.write(response.get_response())
 
         else:
-            response = FileResponse(real_path, part_range, session_id)
+            response = FileResponse(real_path, part_range)
             writer.write(response.get_response())
 
     except FileNotFoundError:

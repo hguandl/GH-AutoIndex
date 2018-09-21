@@ -10,15 +10,14 @@ class AutoindexResponse(object):
         self.headers = ('HTTP/1.0 200 OK\r\n'
                         'Content-Type:text/html; charset=utf-8\r\n'
                         'Server: GH-Autoindex\r\n'
-                        'Connection: close\r\n'
-                        '\r\n')
+                        'Connection: close\r\n')
         self.path = path
         self.real_path = real_path
         title = html.escape(path)
         self.content = ('<html><head><title>Index of ' + title + '</title></head>\r\n'
-                       '<body bgcolor="white">\r\n'
-                       '<h1>Index of ' + title + '</h1><hr>\r\n'
-                       '<pre>\r\n')
+                        '<body bgcolor="white">\r\n'
+                        '<h1>Index of ' + title + '</h1><hr>\r\n'
+                        '<pre>\r\n')
 
     def add_entry(self, name):
         if not os.path.isfile(self.real_path + name):
@@ -30,13 +29,15 @@ class AutoindexResponse(object):
 
     def get_response(self) -> bytes:
         self.content += ('</pre>\r\n'
-                        '<hr>\r\n'
-                        '</body></html>\r\n')
-        return (self.headers + self.content).encode()
+                         '<hr>\r\n'
+                         '</body></html>\r\n')
+        content_bin = self.content.encode()
+        self.headers += str.format('Content-Length: %d\r\n\r\n' % (len(content_bin)))
+        return self.headers.encode() + content_bin
 
 
 class FileResponse(object):
-    def __init__(self, path, part_range, session_id):
+    def __init__(self, path, part_range):
         self.path = path
         self.size = os.path.getsize(path)
         self.start = None
