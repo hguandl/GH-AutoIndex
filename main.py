@@ -77,7 +77,10 @@ async def dispatch(reader, writer):
             elif method == 'HEAD':
                 writer.write(response.get_headers())
 
-    await writer.drain()
+    try:
+        await writer.drain()
+    except BrokenPipeError:
+        pass
     writer.close()
 
 

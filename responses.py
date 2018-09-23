@@ -22,14 +22,14 @@ class AutoIndexResponse(object):
         self.files = []
 
     def add_entry(self, name):
-        isFolder = not os.path.isfile(self.real_path + name)
-        link = urllib.parse.quote(name)
-        if isFolder:
+        if not os.path.isfile(self.real_path + name):
             name += '/'
-        text = html.escape(name)
-        if isFolder:
+            link = urllib.parse.quote(name)
+            text = html.escape(name)
             self.folders.append(str.format('<a href="%s">%s</a>\r\n' % (link, text)))
         else:
+            link = urllib.parse.quote(name)
+            text = html.escape(name)
             self.files.append(str.format('<a href="%s">%s</a>\r\n' % (link, text)))
 
     def get_content(self) -> bytes:
@@ -112,7 +112,7 @@ class NonExistResponse(object):
                         '<head><title>404 Not Found</title></head>\r\n'
                         '<body bgcolor="white">\r\n'
                         '<center><h1>404 Not Found</h1></center>\r\n'
-                        '<hr><center>GH-AutoIndex/0.1.0</center>\r\n'
+                        '<hr><center>GH-AutoIndex/0.1.1</center>\r\n'
                         '</body>\r\n'
                         '</html>\r\n')
 
@@ -138,7 +138,7 @@ class InvalidMethodResponse(object):
                         '<head><title>405 Method Not Allowed</title></head>\r\n'
                         '<body bgcolor="white">\r\n'
                         '<center><h1>405 Method Not Allowed</h1></center>\r\n'
-                        '<hr><center>GH-AutoIndex/0.1.0</center>\r\n'
+                        '<hr><center>GH-AutoIndex/0.1.1</center>\r\n'
                         '</body>\r\n'
                         '</html>\r\n')
 
