@@ -18,16 +18,25 @@ class AutoIndexResponse(object):
                         '<body bgcolor="white">\r\n'
                         '<h1>Index of ' + title + '</h1><hr>\r\n'
                         '<pre>\r\n')
+        self.folders = []
+        self.files = []
 
     def add_entry(self, name):
-        if not os.path.isfile(self.real_path + name):
-            name += '/'
+        isFolder = not os.path.isfile(self.real_path + name)
         link = urllib.parse.quote(name)
+        if isFolder:
+            name += '/'
         text = html.escape(name)
-        html_code = str.format('<a href="%s">%s</a>\r\n' % (link, text))
-        self.content += html_code
+        if isFolder:
+            self.folders.append(str.format('<a href="%s">%s</a>\r\n' % (link, text)))
+        else:
+            self.files.append(str.format('<a href="%s">%s</a>\r\n' % (link, text)))
 
     def get_content(self) -> bytes:
+        for entry in self.folders:
+            self.content += entry
+        for entry in self.files:
+            self.content += entry
         self.content += ('</pre>\r\n'
                          '<hr>\r\n'
                          '</body></html>\r\n')
