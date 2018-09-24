@@ -33,7 +33,7 @@ async def dispatch(reader, writer):
         part_range = client_headers.get('range')
         cookie = client_headers.get('cookie')
 
-        if path == '/' and cookie and cookie.get('last') != '/':
+        if path == '/' and cookie and cookie.get('last') and cookie.get('last') != '/':
             response = RedirectResponse(cookie.get('last'), method=method)
             writer.write(response.get_response())
 

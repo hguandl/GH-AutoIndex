@@ -6,6 +6,18 @@ from mime_types import mime_types
 
 _version = '0.2.0'
 
+class Response(object):
+    def __init__(self, method):
+        self.method = method
+
+    def get_response(self) -> bytes:
+        if self.method == 'HEAD':
+            return self.get_headers()
+        elif self.method == 'GET':
+            return self.get_headers() + self.get_content()
+        else:
+            return b''
+
 
 class AutoIndexResponse(object):
     def __init__(self, path, real_path, method='GET'):
