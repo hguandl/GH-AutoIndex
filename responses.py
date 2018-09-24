@@ -4,7 +4,8 @@ import urllib.parse
 
 from mime_types import mime_types
 
-_version = '0.2.0'
+_version = '0.2.1'
+
 
 class Response(object):
     def __init__(self, method, version, code, message):
@@ -122,14 +123,12 @@ class FileResponse(Response):
         return f_type
 
     def get_body(self) -> bytes:
-        file = open(self.path, 'rb')
-        if self.part_range is not None:
-            file.seek(self.start, 0)
-            self.body = file.read(self.end - self.start + 1)
-        else:
-            self.body = file.read()
-        file.close()
-        return self.body
+        with open(self.path, 'rb') as file:
+            if self.part_range is not None:
+                file.seek(self.start, 0)
+                return file.read(self.end - self.start + 1)
+            else:
+                return file.read()
 
 
 class NonExistResponse(ErrorResponse):
