@@ -1,7 +1,7 @@
 keys = ('method', 'path', 'range', 'cookie')
 
 
-class HTTPHeader:
+class HTTPHeader(object):
     def __init__(self):
         self.headers = {key: None for key in keys}
 
@@ -19,7 +19,7 @@ class HTTPHeader:
         return self.headers.get(key)
 
 
-class HTTPCookie:
+class HTTPCookie(object):
     def __init__(self, string):
         self.__cookie = {}
         items = string.split(';')
@@ -34,7 +34,7 @@ class HTTPCookie:
             return None
 
 
-class HTTPRange:
+class HTTPRange(object):
     def __init__(self, string):
         self.__start = None
         self.__end = None
@@ -45,7 +45,7 @@ class HTTPRange:
                 self.__start = int(range_int[0])
             else:
                 self.__start = 0
-            if range_int[1] != '\r\n':
+            if range_int[1] != '':
                 self.__end = int(range_int[1])
             else:
                 self.__end = -1

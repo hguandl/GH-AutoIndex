@@ -5,7 +5,7 @@ import urllib.parse
 import parse_header
 from responses import AutoIndexResponse, FileResponse, NonExistResponse, InvalidMethodResponse, RedirectResponse
 
-ROOT_PATH = '/Users/hguandl'
+ROOT_PATH = '.'
 LISTEN_ADDR = '127.0.0.1'
 LISTEN_PORT = 8080
 
@@ -25,7 +25,7 @@ async def dispatch(reader, writer):
 
     method = client_headers.get('method')
     if method != 'GET' and method != 'HEAD':
-        response = InvalidMethodResponse()
+        response = InvalidMethodResponse(method)
         writer.write(response.get_response())
 
     else:
@@ -34,7 +34,7 @@ async def dispatch(reader, writer):
         cookie = client_headers.get('cookie')
 
         if path == '/' and cookie and cookie.get('last') and cookie.get('last') != '/':
-            response = RedirectResponse(cookie.get('last'), method=method)
+            response = RedirectResponse(method, cookie.get('last'))
             writer.write(response.get_response())
 
         else:
@@ -43,10 +43,10 @@ async def dispatch(reader, writer):
             try:
                 if not os.path.isfile(real_path):
                     if path[-1:] != '/':
-                        response = RedirectResponse(path + '/', method=method)
+                        response = RedirectResponse(method, path + '/')
                         writer.write(response.get_response())
                     else:
-                        response = AutoIndexResponse(path, real_path, method=method)
+                        response = AutoIndexResponse(method, path, real_path)
                         response.add_entry('..')
                         for filename in os.listdir(real_path):
                             if filename[0:1] != '.':
@@ -54,11 +54,11 @@ async def dispatch(reader, writer):
                         writer.write(response.get_response())
 
                 else:
-                    response = FileResponse(real_path, part_range, method=method)
+                    response = FileResponse(method, real_path, part_range)
                     writer.write(response.get_response())
 
             except FileNotFoundError:
-                response = NonExistResponse(method=method)
+                response = NonExistResponse(method)
                 writer.write(response.get_response())
 
     try:
