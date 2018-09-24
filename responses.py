@@ -7,17 +7,21 @@ from mime_types import mime_types
 
 class AutoIndexResponse(object):
     def __init__(self, path, real_path):
-        self.headers = ('HTTP/1.0 200 OK\r\n'
+        self.headersStart = ('HTTP/1.0 200 OK\r\n'
                         'Content-Type:text/html; charset=utf-8\r\n'
                         'Server: GH-AutoIndex\r\n'
                         'Connection: close\r\n')
+        self.headersEnd = '\r\n'
         self.path = path
         self.real_path = real_path
         title = html.escape(path)
-        self.content = ('<html><head><title>Index of ' + title + '</title></head>\r\n'
+        self.contentStart = ('<html><head><title>Index of ' + title + '</title></head>\r\n'
                         '<body bgcolor="white">\r\n'
                         '<h1>Index of ' + title + '</h1><hr>\r\n'
                         '<pre>\r\n')
+        self.contentEnd = ('</pre>\r\n'
+                         '<hr>\r\n'
+                         '</body></html>\r\n')
         self.folders = []
         self.files = []
 
@@ -33,18 +37,19 @@ class AutoIndexResponse(object):
             self.files.append(str.format('<a href="%s">%s</a>\r\n' % (link, text)))
 
     def get_content(self) -> bytes:
+        content = self.contentStart
         for entry in self.folders:
-            self.content += entry
+            content += entry
         for entry in self.files:
-            self.content += entry
-        self.content += ('</pre>\r\n'
-                         '<hr>\r\n'
-                         '</body></html>\r\n')
-        return self.content.encode()
+            content += entry
+        content += self.contentEnd
+        return content.encode()
 
     def get_headers(self) -> bytes:
-        self.headers += str.format('Content-Length: %d\n\n' % (len(self.get_content())))
-        return self.headers.encode()
+        headers = self.headersStart
+        headers += str.format('Content-Length: %d\r\n' % (len(self.get_content())))
+        headers += self.headersEnd
+        return headers.encode()
 
     def get_response(self) -> bytes:
         return self.get_headers() + self.get_content()
@@ -112,7 +117,7 @@ class NonExistResponse(object):
                         '<head><title>404 Not Found</title></head>\r\n'
                         '<body bgcolor="white">\r\n'
                         '<center><h1>404 Not Found</h1></center>\r\n'
-                        '<hr><center>GH-AutoIndex/0.1.1</center>\r\n'
+                        '<hr><center>GH-AutoIndex/0.1.2</center>\r\n'
                         '</body>\r\n'
                         '</html>\r\n')
 
@@ -138,7 +143,7 @@ class InvalidMethodResponse(object):
                         '<head><title>405 Method Not Allowed</title></head>\r\n'
                         '<body bgcolor="white">\r\n'
                         '<center><h1>405 Method Not Allowed</h1></center>\r\n'
-                        '<hr><center>GH-AutoIndex/0.1.1</center>\r\n'
+                        '<hr><center>GH-AutoIndex/0.1.2</center>\r\n'
                         '</body>\r\n'
                         '</html>\r\n')
 
