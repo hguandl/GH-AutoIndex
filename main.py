@@ -3,28 +3,11 @@ import os
 import urllib.parse
 
 import parse_header
-from responses import AutoIndexResponse, FileResponse, NonExistResponse, InvalidMethodResponse
+from responses import AutoIndexResponse, FileResponse, NonExistResponse, InvalidMethodResponse, RedirectResponse
 
-ROOT_PATH = '.'
+ROOT_PATH = '/Users/hguandl'
 LISTEN_ADDR = '127.0.0.1'
 LISTEN_PORT = 8080
-
-
-def range_parser(part_range) -> (int, int):
-    if part_range is not None:
-        parts = part_range.split('=')
-        if parts[0] == 'bytes':
-            range_int = parts[1].split('-')
-            if range_int[0] != '':
-                start = int(range_int[0])
-            else:
-                start = 0
-            if range_int[1] != '\r\n':
-                end = int(range_int[1])
-            else:
-                end = -1
-            return start, end
-        return None
 
 
 async def dispatch(reader, writer):
@@ -47,35 +30,36 @@ async def dispatch(reader, writer):
 
     else:
         path = urllib.parse.unquote(client_headers.get('path'))
-        part_range = range_parser(client_headers.get('range'))
+        part_range = client_headers.get('range')
+        cookie = client_headers.get('cookie')
 
-        real_path = ROOT_PATH + path
+        if path == '/' and cookie and cookie.get('last') != '/':
+            response = RedirectResponse(cookie.get('last'), method=method)
+            writer.write(response.get_response())
 
-        try:
-            if not os.path.isfile(real_path):
-                response = AutoIndexResponse(path, real_path)
-                response.add_entry('..')
-                for filename in os.listdir(real_path):
-                    if filename[0:1] != '.':
-                        response.add_entry(filename)
-                if method == 'GET':
+        else:
+            real_path = ROOT_PATH + path
+
+            try:
+                if not os.path.isfile(real_path):
+                    if path[-1:] != '/':
+                        response = RedirectResponse(path + '/', method=method)
+                        writer.write(response.get_response())
+                    else:
+                        response = AutoIndexResponse(path, real_path, method=method)
+                        response.add_entry('..')
+                        for filename in os.listdir(real_path):
+                            if filename[0:1] != '.':
+                                response.add_entry(filename)
+                        writer.write(response.get_response())
+
+                else:
+                    response = FileResponse(real_path, part_range, method=method)
                     writer.write(response.get_response())
-                elif method == 'HEAD':
-                    writer.write(response.get_headers())
 
-            else:
-                response = FileResponse(real_path, part_range)
-                if method == 'GET':
-                    writer.write(response.get_response())
-                elif method == 'HEAD':
-                    writer.write(response.get_headers())
-
-        except FileNotFoundError:
-            response = NonExistResponse()
-            if method == 'GET':
+            except FileNotFoundError:
+                response = NonExistResponse(method=method)
                 writer.write(response.get_response())
-            elif method == 'HEAD':
-                writer.write(response.get_headers())
 
     try:
         await writer.drain()
