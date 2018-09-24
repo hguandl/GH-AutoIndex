@@ -72,7 +72,7 @@ class AutoIndexResponse(Response):
             link = urllib.parse.quote(name)
             text = html.escape(name)
             self.folders.append(str.format('<a href="%s">%s</a>\r\n' % (link, text)))
-            self.last_dir = self.path
+            self.last_dir = urllib.parse.quote(self.path)
         else:
             link = urllib.parse.quote(name)
             text = html.escape(name)
