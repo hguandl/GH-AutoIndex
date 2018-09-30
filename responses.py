@@ -98,7 +98,7 @@ class FileResponse(Response):
         super().__init__(method, '1.0', '200', 'OK')
         self.path = path
         self.size = os.path.getsize(path)
-        self.part_range = None
+        self.part_range = part_range
 
         self.headers['Content-Type'] = self.__file_type()
         self.headers['Accept-Ranges'] = 'bytes'
