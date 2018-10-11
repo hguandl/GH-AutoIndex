@@ -4,7 +4,7 @@ import urllib.parse
 
 from mime_types import mime_types
 
-_version = '0.2.1'
+_version = '1.0.0'
 
 
 class Response(object):
@@ -95,7 +95,7 @@ class AutoIndexResponse(Response):
 
 class FileResponse(Response):
     def __init__(self, method, path, part_range):
-        super().__init__(method, '1.0', '200', 'OK')
+        super().__init__(method, '1.1', '200', 'OK')
         self.path = path
         self.size = os.path.getsize(path)
         self.part_range = part_range
